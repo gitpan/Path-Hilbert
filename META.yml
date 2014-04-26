@@ -22,4 +22,4 @@ requires:
   Carp: 0
   integer: 0
   perl: 5.012
-version: 1
+version: 1.001

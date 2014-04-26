@@ -10,7 +10,7 @@ use Exporter qw( import );
 
 our @EXPORT = qw( xy2d d2xy );
 
-our $VERSION = 1.000;
+our $VERSION = 1.001;
 
 # optional constructor if you want OO-style
 sub new {
@@ -71,7 +71,7 @@ sub _valid_n {
     $n = $n->{ n } if ref $n;
     {
         no integer;
-        2 ** (log($n) / log(2)) == $n or confess("Side-length $n is not a power of 2");
+        2 ** int(log($n) / log(2)) == $n or confess("Side-length $n is not a power of 2");
     }
     return $n;
 }
