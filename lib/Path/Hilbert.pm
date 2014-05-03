@@ -10,7 +10,7 @@ use Exporter qw( import );
 
 our @EXPORT = qw( xy2d d2xy );
 
-our $VERSION = 1.002;
+our $VERSION = 1.003;
 
 # optional constructor if you want OO-style
 sub new {
@@ -155,6 +155,11 @@ to the supplied X and Y coordinates (each in the range 0 .. n - 1), where SIDE
 was provided via new().
 
 =back
+
+=head1 CAVEATS
+
+If your platform has I<$n> bit integers, things will go badly if you try a side
+length longer than I<$n / 2>.
 
 =head1 BUGS
 
