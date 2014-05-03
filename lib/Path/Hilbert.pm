@@ -8,7 +8,7 @@ use Exporter qw( import );
 
 our @EXPORT = qw( xy2d d2xy );
 
-our $VERSION = 1.100;
+our $VERSION = 1.101;
 
 # optional constructor if you want OO-style
 sub new {
