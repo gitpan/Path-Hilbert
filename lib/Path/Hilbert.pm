@@ -1,16 +1,14 @@
 package Path::Hilbert;
 
 use 5.012;
-use utf8;
 
 use integer;
-
 use Carp qw( confess );
 use Exporter qw( import );
 
 our @EXPORT = qw( xy2d d2xy );
 
-our $VERSION = 1.003;
+our $VERSION = 1.100;
 
 # optional constructor if you want OO-style
 sub new {
@@ -68,7 +66,7 @@ sub _rot {
 
 sub _valid_n {
     my ($n) = @_;
-    $n = $n->{ n } if ref $n;
+    $n = $n->{ n } if ref($n) =~ /^Path::Hilbert/;
     ($n & ($n - 1)) or return $n;
     confess("Side-length $n is not a power of 2");
 }
@@ -92,6 +90,11 @@ Path::Hilbert - A no-frills converter between 1D and 2D spaces using the Hilbert
     my ($u, $v) = $space->d2xy(127);
     my $t = $space->xy2d($u, $v);
     die unless $t == 127;
+
+    use Path::Hilbert::BigInt;
+    my ($x, $y) = d2xy(5000, 21_342_865);
+    my $d = xy2d(5000, $x, $y);
+    die unless $d == 21_342_865;
 
 =head1 Description
 
@@ -159,7 +162,9 @@ was provided via new().
 =head1 CAVEATS
 
 If your platform has I<$n> bit integers, things will go badly if you try a side
-length longer than I<$n / 2>.
+length longer than I<$n / 2>. If you need enormous Hilbert spaces, you should
+try Path::Hilbert::BigInt, which uses C<Math::BigInt> instead of the native
+C<integer> support for your platform.
 
 =head1 BUGS
 
