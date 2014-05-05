@@ -1,5 +1,7 @@
 Makefile.PL
 MANIFEST
+Changes
+README
 lib/Path/Hilbert.pm
 lib/Path/Hilbert/BigInt.pm
 t/000.t

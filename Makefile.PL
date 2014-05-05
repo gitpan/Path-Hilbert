@@ -11,4 +11,5 @@ WriteMakefile(
     PRINT_PREREQ => 1,
     TEST_REQUIRES => { 'Test::Simple' => 0, },
     VERSION_FROM => 'lib/Path/Hilbert.pm',
+    LICENSE => 'lgpl',
 );

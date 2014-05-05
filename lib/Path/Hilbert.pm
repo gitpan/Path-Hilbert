@@ -8,7 +8,7 @@ use Exporter qw( import );
 
 our @EXPORT = qw( xy2d d2xy );
 
-our $VERSION = 1.102;
+our $VERSION = 1.103;
 
 # optional constructor if you want OO-style
 sub new {
@@ -175,4 +175,4 @@ PWBENNETT <paul.w.bennett@gmail.com>
 
 =head1 LICENSE
 
-Same as Perl.
+GNU LGPL 3.0 or newer.
