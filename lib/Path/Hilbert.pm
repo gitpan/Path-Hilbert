@@ -8,7 +8,7 @@ use Exporter qw( import );
 
 our @EXPORT = qw( xy2d d2xy );
 
-our $VERSION = 1.101;
+our $VERSION = 1.102;
 
 # optional constructor if you want OO-style
 sub new {
@@ -53,7 +53,6 @@ sub d2xy {
 # rotate/flip a quadrant appropriately
 sub _rot {
     my ($n, $x, $y, $rx, $ry) = @_;
-    $n = _valid_n($n);
     if (!$ry) {
         if ($rx) {
             $x = $n - 1 - $x;
@@ -66,7 +65,7 @@ sub _rot {
 
 sub _valid_n {
     my ($n) = @_;
-    $n = $n->{ n } if ref($n) =~ /^Path::Hilbert/;
+    $n = $n->{ n } if ref($n);
     ($n & ($n - 1)) or return $n;
     confess("Side-length $n is not a power of 2");
 }
@@ -91,18 +90,13 @@ Path::Hilbert - A no-frills converter between 1D and 2D spaces using the Hilbert
     my $t = $space->xy2d($u, $v);
     die unless $t == 127;
 
-    use Path::Hilbert::BigInt;
-    my ($x, $y) = d2xy(5000, 21_342_865);
-    my $d = xy2d(5000, $x, $y);
-    die unless $d == 21_342_865;
-
 =head1 Description
 
 See Wikipedia for a description of the Hilbert curve, and why it's a good idea.
 
 Most (all?) of the existing CPAN modules for dealing with Hilbert curves state
-"only works for $foo data", "optimized for foo situations", or "designed to
-work as part of the foo framework". This module is based directly on the
+"only works for $foo data", "optimized for $foo situations", or "designed to
+work as part of the $foo framework". This module is based directly on the
 example algorithm given on Wikipedia, and thus is subject only to the single
 strict limitation of Hilbert curves: that the side-length 'n' MUST be an
 integer power of 2.
@@ -162,8 +156,8 @@ was provided via new().
 =head1 CAVEATS
 
 If your platform has I<$n> bit integers, things will go badly if you try a side
-length longer than I<$n / 2>. If you need enormous Hilbert spaces, you should
-try Path::Hilbert::BigInt, which uses C<Math::BigInt> instead of the native
+length longer than I<2 ** ($n / 2)>. If you need enormous Hilbert spaces, you should
+try L<Path::Hilbert::BigInt>, which uses L<Math::BigInt> instead of the native
 C<integer> support for your platform.
 
 =head1 BUGS

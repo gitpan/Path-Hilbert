@@ -9,7 +9,7 @@ use Exporter qw( import );
 
 our @EXPORT = qw( xy2d d2xy );
 
-our $VERSION = 1.101;
+our $VERSION = 1.102;
 
 # optional constructor if you want OO-style
 sub new {
@@ -87,8 +87,8 @@ Path::Hilbert::BigInt - A slower, no-frills converter between very large 1D and 
 =head1 SYNOPSIS
 
     use Path::Hilbert::BigInt;
-    my ($x, $y) = d2xy(5000, 21_342_865);
-    my $d = xy2d(5000, $x, $y);
+    my ($x, $y) = d2xy(8192, 21_342_865);
+    my $d = xy2d(8192, $x, $y);
     die unless $d == 21_342_865;
 
 =head1 Description

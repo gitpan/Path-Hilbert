@@ -7,8 +7,7 @@ use Test::Simple (tests => 136);
 POWER:
 for my $pow (0 .. 15) {
     my $n = 2 ** $pow;
-    for my $d (0 .. 15) {
-        next POWER if $d > $pow;
+    for my $d (0 .. $pow) {
         my ($x, $y) = Path::Hilbert::d2xy($n, $d);
         my $e = Path::Hilbert::xy2d($n, $x, $y);
         my ($Bx, $By) = Path::Hilbert::BigInt::d2xy($n, $d);
