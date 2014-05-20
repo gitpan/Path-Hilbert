@@ -2,57 +2,71 @@ package Path::Hilbert;
 
 use 5.012;
 
-use integer;
-use Carp qw( confess );
+use local::lib;
+
 use Exporter qw( import );
 
 our @EXPORT = qw( xy2d d2xy );
 
-our $VERSION = 1.103;
+our $VERSION = 1.200;
 
 # optional constructor if you want OO-style
 sub new {
     my $class = shift;
     my ($n) = @_;
-    $n = _valid_n($n);
     return bless { n => $n } => $class;
 }
 
 # convert (x,y) to d
 sub xy2d {
-    my ($n, $x, $y) = @_;
-    $n = _valid_n($n);
-    my ($rx, $ry, $d);
-    my $d = 0;
-    for (my $s = $n / 2; $s > 0; $s /= 2) {
-        my $rx = ($x & $s) > 0;
-        my $ry = ($y & $s) > 0;
-        $d += $s * $s * ((3 * $rx) ^ $ry);
-        ($x, $y) = _rot($s, $x, $y, $rx, $ry);
+    my ($side, $x, $y) = @_;
+    my $n = _valid_n($side);
+    my ($X, $Y) = map { int($_ + 0.5) } ($x, $y);
+    my $D;
+    {
+        use integer;
+        my $d = 0;
+        my ($x, $y) = map { int($_) } ($X, $Y);
+        for (my $s = $n / 2; $s > 0; $s /= 2) {
+            my $rx = ($x & $s) > 0;
+            my $ry = ($y & $s) > 0;
+            $d += $s * $s * ((3 * $rx) ^ $ry);
+            ($x, $y) = _rot($s, $x, $y, $rx, $ry);
+        }
+        no integer;
+        $D = $d;
     }
-    return $d;
+    return $D * _side_scale($side);
 }
 
 # convert d to (x,y)
 sub d2xy {
-    my ($n, $d) = @_;
-    $n = _valid_n($n);
-    my $t = $d;
-    my ($x, $y) = (0, 0);
-    for (my $s = 1; $s < $n; $s *= 2) {
-        my $rx = 1 & ($t / 2);
-        my $ry = 1 & ($t ^ $rx);
-        ($x, $y) = _rot($s, $x, $y, $rx, $ry);
-        $x += $s * $rx;
-        $y += $s * $ry;
-        $t /= 4;
+    my ($side, $d) = @_;
+    my $n = _valid_n($side);
+    my $T = int($d + 0.5);
+    my ($X, $Y);
+    {
+        use integer;
+        my ($x, $y) = (0, 0);
+        my $t = int($T);
+        for (my $s = 1; $s < $n; $s *= 2) {
+            my $rx = 1 & ($t / 2);
+            my $ry = 1 & ($t ^ $rx);
+            ($x, $y) = _rot($s, $x, $y, $rx, $ry);
+            $x += $s * $rx;
+            $y += $s * $ry;
+            $t /= 4;
+        }
+        no integer;
+        ($X, $Y) = ($x, $y);
     }
-    return ($x, $y);
+    return map { _side_scale($side) * $_ } ($X, $Y);
 }
 
 # rotate/flip a quadrant appropriately
 sub _rot {
-    my ($n, $x, $y, $rx, $ry) = @_;
+    use integer;
+    my ($n, $x, $y, $rx, $ry) = map { int($_) } @_;
     if (!$ry) {
         if ($rx) {
             $x = $n - 1 - $x;
@@ -64,10 +78,23 @@ sub _rot {
 }
 
 sub _valid_n {
+    my $n = _extract_side(shift(@_));
+    no integer;
+    my $rv = 2 ** int((log($n) / log(2)) + 0.5);
+    use integer;
+    return int($rv);
+}
+
+sub _extract_side {
     my ($n) = @_;
     $n = $n->{ n } if ref($n);
-    ($n & ($n - 1)) or return $n;
-    confess("Side-length $n is not a power of 2");
+    return $n;
+}
+
+sub _side_scale {
+    my $side = _extract_side(shift(@_));
+    my $n = _valid_n($side);
+    return $side / $n;
 }
 
 1;
@@ -96,10 +123,21 @@ See Wikipedia for a description of the Hilbert curve, and why it's a good idea.
 
 Most (all?) of the existing CPAN modules for dealing with Hilbert curves state
 "only works for $foo data", "optimized for $foo situations", or "designed to
-work as part of the $foo framework". This module is based directly on the
-example algorithm given on Wikipedia, and thus is subject only to the single
-strict limitation of Hilbert curves: that the side-length 'n' MUST be an
-integer power of 2.
+work as part of the $foo framework".
+
+This module is based directly on the example algorithm given on Wikipedia,
+except it is not subject to the strict limitation of "proper" Hilbert curves,
+which is that the side-length I<$n> MUST be a non-negative integer power of 2.
+
+If you supply an "invalid but sane" side length (i.e. any positive number), be
+fore-warned that you'll get a non-integer answer. Unfortunately, I haven't yet
+worked out how to make this particular algorithm work with non-integer I<inputs>
+for I<$d>, or I<($x, $y)>, so if you supply such, they'll be rounded to the nearest
+integer before being fed into the algorithm. So far, I have not found a
+practical real-world use-case where the rounding-error is significant -- except
+perhaps in the case of very small (single digit or less) side lengths, but
+I hereby advise you to pre- and post-scale the arguments and return values by
+some sane amount as the best workaround.
 
 =head2 Function-Oriented Interface
 

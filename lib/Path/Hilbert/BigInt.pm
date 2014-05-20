@@ -2,66 +2,67 @@ package Path::Hilbert::BigInt;
 
 use 5.012;
 
+use local::lib;
+
+use Math::BigRat try => 'GMP,Pari,Calc';
 use Math::BigInt try => 'GMP,Pari,Calc';
 
-use Carp qw( confess );
 use Exporter qw( import );
 
 our @EXPORT = qw( xy2d d2xy );
 
-our $VERSION = 1.103;
+our $VERSION = 1.200;
 
 # optional constructor if you want OO-style
 sub new {
     my $class = shift;
     my ($n) = @_;
-    $n = _valid_n($n);
     return bless { n => $n } => $class;
 }
 
 # convert (x,y) to d
 sub xy2d {
-    my ($n, $x, $y) = @_;
-    $n = _valid_n($n);
+    my ($side, $x, $y) = @_;
+    my $n = _valid_n($side);
     ($x, $y) = map { Math::BigInt->new("$_") } ($x, $y);
-    my $d = Math::BigInt->new("0");
-    for (my $s = $n->copy()->bdiv("2"); "$s" > 0; $s->bdiv("2")) {
-        my $rx = Math::BigInt->new(($x->copy()->band($s)) > 0 ? "1" : "0");
-        my $ry = Math::BigInt->new(($y->copy()->band($s)) > 0 ? "1" : "0");
+    my $d = Math::BigInt->bzero();
+    for (my $s = $n->copy()->brsft(1); $s->bcmp(0) > 0; $s->brsft(1)) {
+        my $rx = Math::BigInt->new($x->copy()->band($s)->bcmp(0) > 0 ? "1" : "0");
+        my $ry = Math::BigInt->new($y->copy()->band($s)->bcmp(0) > 0 ? "1" : "0");
         my $three_rx = $rx->copy()->bmul("3");
         my $s_squared = $s->copy()->bpow("2");
         $d->badd($s_squared->bmul($three_rx->bxor($ry)));
         ($x, $y) = _rot($s, $x, $y, $rx, $ry);
     }
-    return $d;
+    return Math::BigRat->new($d);
 }
 
 # convert d to (x,y)
 sub d2xy {
-    my ($n, $d) = @_;
-    $n = _valid_n($n);
-    my $t = Math::BigInt->new("$d");
-    my ($x, $y) = map { Math::BigInt->new("$_") } (0, 0);
-    for (my $s = Math::BigInt->new("1"); "$s" < "$n"; $s->bmul("2")) {
-        my $rx = $t->copy()->bdiv(2)->band("1");
-        my $ry = $t->copy()->bxor($rx)->band("1");
+    my ($side, $d) = @_;
+    my $n = _valid_n($side);
+    my $t = Math::BigInt->new($d);
+    my ($x, $y) = map { Math::BigInt->bzero() } (1 .. 2);
+    for (my $s = Math::BigInt->bone(); $s->bcmp($n) < 0; $s->blsft(1)) {
+        my $rx = $t->copy()->brsft(1)->band(Math::BigInt->bone());
+        my $ry = $t->copy()->bxor($rx)->band(Math::BigInt->bone());
         ($x, $y) = _rot($s, $x, $y, $rx, $ry);
         my $Dx = $s->copy()->bmul($rx);
         my $Dy = $s->copy()->bmul($ry);
-        $Dx >= 0 ? $x->badd($Dx) : $x->bsub($Dx->babs());
-        $Dy >= 0 ? $y->badd($Dy) : $y->bsub($Dy->babs());
-        $t->bdiv("4");
+        $Dx >= 0 ? $x->badd($Dx) : $x->bsub($Dx->copy()->babs());
+        $Dy >= 0 ? $y->badd($Dy) : $y->bsub($Dy->copy()->babs());
+        $t->brsft(2);
     }
-    return ($x, $y);
+    return map { Math::BigRat->new($_) } ($x, $y);
 }
 
 # rotate/flip a quadrant appropriately
 sub _rot {
-    my ($n, $x, $y, $rx, $ry) = map { Math::BigInt->new("$_") } @_;
-    if ("$ry" == 0) {
-        if ("$rx" > 0) {
-            $x = $n->copy()->bsub("1")->bsub($x);
-            $y = $n->copy()->bsub("1")->bsub($y);
+    my ($n, $x, $y, $rx, $ry) = @_;
+    if (!$ry) {
+        if ($rx > 0) {
+            $x = $n - 1 - $x;
+            $y = $n - 1 - $y;
         }
         ($x, $y) = ($y, $x);
     }
@@ -69,11 +70,15 @@ sub _rot {
 }
 
 sub _valid_n {
-    my ($n) = @_;
-    $n = $n->{ n } if eval { exists $n->{ n } };
-    $n = Math::BigInt->new("$n");
-    ($n->copy()->band($n->copy()->bsub("1"))) or return $n;
-    confess("Side-length $n is not a power of 2");
+    my $n = _extract_side(shift(@_));
+    $n = 2 ** int((eval { (log($n) / log(2)) } || 0) + 0.5);
+    return Math::BigInt->new(int($n));
+}
+
+sub _extract_side {
+    my ($side) = @_;
+    $side = $side->{ n } if ref($side) eq 'HASH' && exists $side->{ n };
+    return $side;
 }
 
 1;

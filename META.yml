@@ -23,4 +23,4 @@ requires:
   Math::BigInt: 0
   integer: 0
   perl: 5.012
-version: 1.103
+version: 1.2
