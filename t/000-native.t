@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 
 use Path::Hilbert qw();
-use Test::Simple (tests => 1360);
+use Test::Simple (tests => (1360 * 3));
 
 for my $pow (0 .. 15) {
     for my $dec (0 .. 9) {
@@ -10,7 +10,10 @@ for my $pow (0 .. 15) {
         for my $d (map { $_ + $dec } 0 .. $pow) {
             my ($x, $y) = Path::Hilbert::d2xy($n, $d);
             my $e = Path::Hilbert::xy2d($n, $x, $y);
-            ok(abs($d - $e) < 1, "d $d -> ($x, $y) -> e $e (\$n == $n)");
+            my ($x2, $y2) = Path::Hilbert::d2xy($n, $e);
+            ok(abs($d - $e) <= ($d / 100), "d $d -> ($x, $y) -> e $e (\$n == $n)");
+            ok(abs($x - $x2) <= ($x / 100), "x $x ~~ $x2 (\$n == $n)");
+            ok(abs($y - $y2) <= ($y / 100), "y $y ~~ $y2 (\$n == $n)");
             # ok(0, "d $d -> ($x, $y) e $e (\$n == $n)");
         }
     }
