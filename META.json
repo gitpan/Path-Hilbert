@@ -36,10 +36,11 @@
             "Carp" : "0",
             "Math::BigInt" : "0",
             "integer" : "0",
+            "local::lib" : "0",
             "perl" : "5.012"
          }
       }
    },
    "release_status" : "stable",
-   "version" : "1.201"
+   "version" : "1.202"
 }

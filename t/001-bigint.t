@@ -12,9 +12,9 @@ for my $pow (0 .. 15) {
             my ($Sx, $Sy) = Path::Hilbert::d2xy($n, $d);
             my ($x, $y) = map { $_->numify() } Path::Hilbert::BigInt::d2xy($n, $d);
             my $e = Path::Hilbert::BigInt::xy2d($n, $x, $y)->numify();
-            ok(abs($Sx - $x) < 1, "X $x ~~ x $Sx (\$n == $n)");
-            ok(abs($Sy - $y) < 1, "Y $y ~~ y $Sy (\$n == $n)");
-            ok(abs($d - $e) < 1, "d $d -> ($x, $y) -> E $e (\$n == $n)");
+            ok(abs($Sx - $x) <= ($Sx / 100), "X $x ~~ x $Sx (\$n == $n)");
+            ok(abs($Sy - $y) <= ($Sy / 100), "Y $y ~~ y $Sy (\$n == $n)");
+            ok(abs($d - $e) <= ($d / 100), "d $d -> ($x, $y) -> E $e (\$n == $n)");
             # ok(1, "d $d -> E $e (\$n == $n)");
         }
     }
